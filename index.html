@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mood Catcher - 情绪捕获器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(180deg, #FAFAF8 0%, #F5F5F0 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+    }
+
+    .game-container {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 2px solid #E8E8E0;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #E8E8E0;
+    }
+
+    .game-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #2C2C2C;
+      letter-spacing: 1px;
+    }
+
+    .game-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #888888;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: lowercase;
+      margin-top: 4px;
+    }
+
+    .mood-counter {
+      background: white;
+      border: 2px solid #2C2C2C;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2C2C2C;
+      box-shadow: 3px 3px 0 #2C2C2C;
+    }
+
+    .game-area {
+      flex: 1;
+      background: white;
+      border: 2px solid #2C2C2C;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      min-height: 300px;
+      box-shadow: 4px 4px 0 #2C2C2C;
+    }
+
+    .game-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .platform {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 20px;
+      background: linear-gradient(180deg, #F5E6C8, #D4C4A8);
+      border: 3px solid #2C2C2C;
+      border-radius: 25px;
+      box-shadow: 3px 3px 0 #2C2C2C;
+      transition: left 0.1s ease-out;
+    }
+
+    .platform::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 10px;
+      right: 10px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 2px;
+    }
+
+    .note {
+      position: absolute;
+      font-size: 28px;
+      animation: fall linear forwards;
+      cursor: default;
+      user-select: none;
+    }
+
+    @keyframes fall {
+      from { transform: translateY(0); }
+      to { transform: translateY(calc(100vh - 100px)); }
+    }
+
+    .game-controls {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .control-btn {
+      flex: 1;
+      max-width: 160px;
+      padding: 14px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      border: 3px solid #2C2C2C;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 1px;
+    }
+
+    .btn-left {
+      background: #F5E6C8;
+      color: #2C2C2C;
+      box-shadow: 4px 4px 0 #2C2C2C;
+    }
+
+    .btn-left:hover {
+      background: #E8D8B8;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #2C2C2C;
+    }
+
+    .btn-left:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #2C2C2C;
+    }
+
+    .btn-start {
+      background: white;
+      color: #2C2C2C;
+      box-shadow: 4px 4px 0 #2C2C2C;
+    }
+
+    .btn-start:hover {
+      background: #FAFAFA;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #2C2C2C;
+    }
+
+    .btn-start:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #2C2C2C;
+    }
+
+    .btn-right {
+      background: white;
+      color: #2C2C2C;
+      box-shadow: 4px 4px 0 #2C2C2C;
+    }
+
+    .btn-right:hover {
+      background: #FAFAFA;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #2C2C2C;
+    }
+
+    .btn-right:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #2C2C2C;
+    }
+
+    .game-over-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      border-radius: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .game-over-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #2C2C2C;
+      margin-bottom: 16px;
+    }
+
+    .game-over-score {
+      font-family: 'Inter', sans-serif;
+      font-size: 24px;
+      color: #888888;
+      margin-bottom: 24px;
+    }
+
+    .game-over-score span {
+      color: #D2691E;
+      font-weight: 700;
+      font-size: 32px;
+    }
+
+    .restart-btn {
+      padding: 14px 40px;
+      background: #F5E6C8;
+      color: #2C2C2C;
+      border: 3px solid #2C2C2C;
+      border-radius: 25px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 #2C2C2C;
+      transition: all 0.2s ease;
+    }
+
+    .restart-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #2C2C2C;
+    }
+
+    .restart-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #2C2C2C;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .instructions {
+      text-align: center;
+      margin-top: 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #AAAAAA;
+    }
+
+    @media (max-width: 480px) {
+      .game-container {
+        padding: 20px;
+        margin: 16px;
+      }
+
+      .game-title {
+        font-size: 22px;
+      }
+
+      .game-subtitle {
+        font-size: 10px;
+      }
+
+      .mood-counter {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .game-area {
+        min-height: 250px;
+      }
+
+      .platform {
+        width: 100px;
+      }
+
+      .control-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-background"></div>
+  
+  <div class="game-container">
+    <div class="game-header">
+      <div>
+        <h1 class="game-title">Mood Catcher</h1>
+        <p class="game-subtitle">catch notes, build a palette</p>
+      </div>
+      <div class="mood-counter">Mood <span id="score">0</span></div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+      <div class="game-grid"></div>
+      <div class="platform" id="platform"></div>
+    </div>
+
+    <div class="game-controls">
+      <button class="control-btn btn-left" id="leftBtn">Left</button>
+      <button class="control-btn btn-start" id="startBtn">Start</button>
+      <button class="control-btn btn-right" id="rightBtn">Right</button>
+    </div>
+
+    <p class="instructions">使用方向键 ← → 或点击按钮控制平台移动</p>
+  </div>
+
+  <script>
+    const notes = ['🎵', '🎶', '🎹', '🎸', '🎺', '🎻', '🎷', '🥁', '🎤', '🎧'];
+    
+    const gameArea = document.getElementById('gameArea');
+    const platform = document.getElementById('platform');
+    const scoreElement = document.getElementById('score');
+    const startBtn = document.getElementById('startBtn');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+
+    let score = 0;
+    let gameRunning = false;
+    let platformPosition = 50;
+    let gameLoop = null;
+    let spawnInterval = null;
+    let fallingNotes = [];
+
+    const gameAreaWidth = gameArea.offsetWidth;
+    const platformWidth = 120;
+    const moveSpeed = 8;
+
+    function updateScore() {
+      scoreElement.textContent = score;
+    }
+
+    function movePlatform(direction) {
+      if (!gameRunning) return;
+      
+      if (direction === 'left') {
+        platformPosition = Math.max(5, platformPosition - moveSpeed);
+      } else {
+        platformPosition = Math.min(95, platformPosition + moveSpeed);
+      }
+      
+      platform.style.left = `${platformPosition}%`;
+    }
+
+    function spawnNote() {
+      if (!gameRunning) return;
+
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.textContent = notes[Math.floor(Math.random() * notes.length)];
+      note.style.left = `${Math.random() * 80 + 10}%`;
+      note.style.top = '-30px';
+      
+      const fallDuration = 3000 + Math.random() * 2000;
+      note.style.animationDuration = `${fallDuration}ms`;
+      
+      gameArea.appendChild(note);
+      
+      const noteData = {
+        element: note,
+        startTime: Date.now(),
+        duration: fallDuration
+      };
+      
+      fallingNotes.push(noteData);
+    }
+
+    function checkCollisions() {
+      const platformRect = platform.getBoundingClientRect();
+      const gameAreaRect = gameArea.getBoundingClientRect();
+      
+      for (let i = fallingNotes.length - 1; i >= 0; i--) {
+        const noteData = fallingNotes[i];
+        const noteRect = noteData.element.getBoundingClientRect();
+        
+        const noteBottom = noteRect.top - gameAreaRect.top;
+        const platformTop = platformRect.top - gameAreaRect.top;
+        
+        if (noteBottom >= platformTop - 30 && noteBottom <= platformTop + 20) {
+          const noteLeft = noteRect.left - gameAreaRect.left;
+          const platformLeft = platformRect.left - gameAreaRect.left;
+          
+          if (noteLeft >= platformLeft - 20 && noteLeft <= platformLeft + platformWidth + 20) {
+            score++;
+            updateScore();
+            noteData.element.remove();
+            fallingNotes.splice(i, 1);
+          }
+        }
+        
+        if (noteBottom > gameAreaRect.height) {
+          noteData.element.remove();
+          fallingNotes.splice(i, 1);
+          
+          if (score > 0) {
+            score--;
+            updateScore();
+          }
+        }
+      }
+    }
+
+    function gameUpdate() {
+      if (!gameRunning) return;
+      checkCollisions();
+      gameLoop = requestAnimationFrame(gameUpdate);
+    }
+
+    function startGame() {
+      if (gameRunning) return;
+      
+      gameRunning = true;
+      score = 0;
+      updateScore();
+      platformPosition = 50;
+      platform.style.left = '50%';
+      
+      fallingNotes.forEach(noteData => {
+        noteData.element.remove();
+      });
+      fallingNotes = [];
+      
+      gameLoop = requestAnimationFrame(gameUpdate);
+      spawnInterval = setInterval(spawnNote, 1500);
+      
+      startBtn.textContent = 'Playing...';
+      startBtn.style.background = '#E8F5E9';
+    }
+
+    function stopGame() {
+      gameRunning = false;
+      
+      if (gameLoop) {
+        cancelAnimationFrame(gameLoop);
+        gameLoop = null;
+      }
+      
+      if (spawnInterval) {
+        clearInterval(spawnInterval);
+        spawnInterval = null;
+      }
+      
+      startBtn.textContent = 'Start';
+      startBtn.style.background = 'white';
+    }
+
+    leftBtn.addEventListener('click', () => movePlatform('left'));
+    rightBtn.addEventListener('click', () => movePlatform('right'));
+    startBtn.addEventListener('click', startGame);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        movePlatform('left');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        movePlatform('right');
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        if (!gameRunning) {
+          startGame();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
